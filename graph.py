@@ -1,20 +1,40 @@
-import pprint  # ***
+import string
 
 
 class Graph:
-    __arc_list: list[list[int, int, int]] = []
+    _available_names = string.ascii_uppercase + string.ascii_lowercase
+    __arc_list: list[list[int]] = []
     __mark_name_accordance: dict[int, str] = {}
 
 
     def sh_accordance(self):                 # ***
-        print(self.__mark_name_accordance)
+        return self.__mark_name_accordance
 
     def sh_arc_list(self):                   # ***
-        pprint.pprint(self.__arc_list)
+        return self.__arc_list
 
 
-    def __init__(self, arc_list: list[list[int, int, int]] = None):
-        self.__arc_list = [] if arc_list is None else arc_list
+    def __init__(self, arc_list: list[list[int]] = None):
+        if arc_list is not None:
+            self.__arc_list = arc_list
+            self._fill_accordance_from_arc_list(arc_list)
+
+    
+    def _fill_accordance_from_arc_list(self, arc_list: list[list[int]]) -> None:
+        marks = set()
+        for arc in arc_list:
+            marks.add(arc[0])
+            marks.add(arc[1])
+        for mark in marks:
+            self.add_ver(self._available_names[mark], mark)
+
+
+    @property
+    def adjacency_list_representation(self):
+        repr = {}
+        for mark in self.get_all_marks():
+            repr[mark] = {self.__arc_list[out_arc_i][1]: self.__arc_list[out_arc_i][2] for out_arc_i in self._find_outcoming_arc_indexes(mark)}
+        return repr
 
 
     def adjacent_vertexes(self, v: int) -> list[int]:
@@ -32,7 +52,6 @@ class Graph:
             return adj_verts[0]
         except IndexError:
             raise Exception(f"Vertex {v} doesn't have adjacent vertexes")
-
 
 
     def next_adjacent(self, v: int, i: int) -> int:
@@ -56,6 +75,13 @@ class Graph:
         except IndexError:
             raise Exception(f"There is no vertex under index {i} in the list of adjacent vertexes for vert {v}")
 
+
+    def get_all_marks(self) -> list[int]:
+        return [m for m in self.__mark_name_accordance.keys() if isinstance(m, int)]
+    
+
+    def get_all_names(self) -> list[str]:
+        return [n for n in self.__mark_name_accordance.keys() if isinstance(n, str)]
 
 
     def add_ver(self, name: str, v: int) -> None:
