@@ -14,24 +14,21 @@ def is_matrix_square(matrix: list[list[int]]) -> None:
             raise Exception("The matrix is not square")
         
 
-def find_all_cycles(graph_repr: dict[int, dict[int, int]], start_mark: int, cur_mark: int = None, cur_length: int = 0, route: list = []):
-    # print(f"{cur_mark=}")
-    # print(f"{route=}")
-    if len(route) == 0:
-        cur_mark = start_mark
-        route.append(start_mark)
-    if cur_mark == start_mark and cur_length > 0:  # выходим, если прошли цикл и пришли в начальный узел
-        print((route, cur_length))
-        return (route, cur_length)
+def find_all_cycles(graph_repr: dict[int, dict[int, int]], start_mark: int, route: list[int], cur_mark: int = None, cur_length: int = 0):
+    """Делаем рекурсивный обход в глубину и находим все возможные циклы, которые начинаются в узле start_mark и 
+    заканчиваются в нём же, а также их длину, которая равна сумме весов дуг повстречавшихся на пути"""
+    if len(route) == 1:            # если только начинаем обход со стартового узла, то
+        cur_mark = start_mark      # задаем значение текущего узла равное стартовому
+    if cur_mark == start_mark and cur_length > 0:  # возвращаем значение, если прошли цикл и пришли в начальный узел
+        yield (route, cur_length)  # возвращаемый формат: ( [<маршрут_цикла>], длина_цикла )
     else:
-        keys = list(graph_repr[cur_mark].keys())
-        if route != [start_mark]:
-            for next_mark_ind in range(len(keys)-1, -1, -1):                  # удаляем из последующих возможных узлов те, которые уже были пройдены
-                if (keys[next_mark_ind] in route[1:]):                        # после первого хопа - среди возможных путей оставляем start_mark
+        keys = list(graph_repr[cur_mark].keys())   # формируем массив из маркировок всех смежных узлов
+        if route != [start_mark]:  # если сейчас не самый первый переход из стартового узла, то
+            for next_mark_ind in range(len(keys)-1, -1, -1):      # удаляем из смежных узлов те, которые уже были пройдены (чтобы не происходило бесконечного зацикливания)
+                if (keys[next_mark_ind] in route[1:]):            # после первого перехода всегда оставляем start_mark среди смежных узлов, чтобы цикл было возможно замкнуть
                     del keys[next_mark_ind]
-        print(keys)
-        for mark in keys:
-            return find_all_cycles(
+        for mark in keys:                   # для всех доступных смежных узлов
+            yield from find_all_cycles(     # продолжаем углубляться
                 graph_repr=graph_repr, 
                 start_mark=start_mark, 
                 cur_mark=mark, 
